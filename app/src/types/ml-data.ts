@@ -9,3 +9,9 @@ export type MLData = {
     categories: MLCategory[]
 }
 
+export type CSVData = {
+    examples: Array<Array<number>>;
+    categoryLabels: Map<string, number>;
+    attributes: Map<string, number>;
+}
+

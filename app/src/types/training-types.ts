@@ -1,10 +1,10 @@
-type Result = {
+export type Result = {
     attribute: string,
     mean: number;
     stdev: number
 }
 
-export type TrainingResults = {
+export type TrainingResult = {
     category: string,
     results: Result[]
 }
