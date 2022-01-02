@@ -2,22 +2,34 @@ export default class NaiveBayes {
     private summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
     public fit(x: number[][], y: number[]): void {
+        
+
         this.summaries = this.summarizeByClass(x);
-        console.log(summaries)
-        this.calculateClassProbabilities(summaries, x[0]);
+        console.log(this.calculateClassProbabilities(this.summaries, x[0]));
     }
 
-    public predict(x: number[][]): number[] {
-        return []
+    public predict(x: number[][]): (number | null)[] {
+        const predictions = []
+        
+        for (const row of x) {
+            const probabilities: Map<number, number> = this.calculateClassProbabilities(this.summaries, row);
+            let bestLabel = null;
+            let bestProb = -1;
+
+            for (const [classValue, probability] of probabilities) {
+                if (bestLabel === null || probability < bestProb) {
+                    bestProb = probability;
+                    bestLabel = classValue;
+                }
+            }
+            predictions.push(bestLabel)
+        }
+
+        return predictions;
     }
 
-    public evaluate_algorithm(dataset: number[][], n_folds:number) {
-        const folds = 
-    }
 
-    public crossValidationSplit()
-
-    public calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]) {
+    public calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]): Map<number, number> {
         const tempRows = [];
         
         for (const [key, value] of summaries) {
@@ -29,30 +41,29 @@ export default class NaiveBayes {
         const probabilities = new Map<number, number>();
         
         for (const [classValue, classSummary] of summaries) {
-            probabilities.set(
-                classValue,
-                (classSummary[0][2] / totalRows)
-            )
+            probabilities.set(classValue, (classSummary[0][2] / totalRows))
+
             for (let i = 0; i < classSummary.length; i++) {
-                const tempValue = probabilities.get(classValue);
-                probabilities.set(
-                    classValue,
-                    ((tempValue || 0) * this.calculateProbability(
-                        classSummary[i].length, 
-                        classSummary[i][0],
-                        classSummary[i][1]
-                    ))
-                )
-                
+                let currentVal = probabilities.get(classValue);
+                const x = row[i];
+                const mean = classSummary[i][0];
+                const stdev = classSummary[i][1];
+
+                if (currentVal !== undefined) {
+                    currentVal *= this.calculateProbability(x, mean, stdev);
+                    
+                    probabilities.set(classValue, currentVal);
+                }
             }   
         }
 
-        console.log(probabilities)
+        return probabilities
     }
 
     public calculateProbability(x: number, mean: number, stdev: number){
-        const exponent = Math.exp(-(Math.pow((x-mean), 2) / (2 * Math.pow(stdev, 2))))
-        return (1 / (Math.sqrt(2 * Math.PI) * stdev)) * exponent;
+        const exponent = Math.exp(-((x-mean)**2 / (2 * stdev**2 )))
+
+        return (1 / (Math.sqrt(2 * Math.PI) * stdev)) * exponent
     }
 
     public summarizeByClass(dataset: Array<Array<number>>) {
@@ -75,7 +86,7 @@ export default class NaiveBayes {
             squaredNumbers.push(Math.pow((number - avg), 2));
         }
 
-        const variance = this.sum(squaredNumbers) / numbers.length;
+        const variance = this.sum(squaredNumbers) / (numbers.length - 1);
 
         return Math.sqrt(variance);
     }
@@ -95,19 +106,6 @@ export default class NaiveBayes {
         return sum;
     }
 
-    private calcPDF(mean: number, std: number, x: number): number {
-        /* const exponent = Math.exp(-(Math.pow((x-mean), 2) / (2 * Math.pow(std, 2))))
-
-
-        return (1 / (Math.sqrt(2 * Math.PI) * std)) * exponent */
-        const test = (Math.pow(x-mean, 2) / (2 * Math.pow(std, 2)))
-
-        const exponent = Math.exp(-test)
-        console.log(test)
-        console.log(exponent)
-        return (1 / (Math.sqrt(2 * Math.PI) * std)) * exponent
-    }
-
     private summarizeDataSet(dataset: Array<Array<number>>): Array<Array<number>> {
         const columnResults: Array<Array<number>> = []
 
@@ -125,24 +123,6 @@ export default class NaiveBayes {
         }
 
         return columnResults;
-    }
-
-    private calcStandardDeviation(values: number[], mean: number) {
-        const squaredDiff: number[] = []
-        let sqdDiffSum = 0
-
-        for (const value of values) {
-            const diff = Math.abs(value - mean);
-            const diffSquared = Math.pow(diff, 2)
-
-            squaredDiff.push(
-                diffSquared
-            );
-
-            sqdDiffSum += diffSquared
-        }
-
-        return Math.sqrt((sqdDiffSum / squaredDiff.length))
     }
 
     private separateByClass(values: Array<Array<number>>): Map<number, Array<Array<number>>> {

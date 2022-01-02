@@ -8,7 +8,7 @@ export const createDataFromCSVRows = (csvRows: string[]): CSVData => {
 
     let labelsCounter = 0
 
-    for (let i = 1; i < csvRows.length - 1; i++) {
+    for (let i = 1; i < csvRows.length; i++) {
         const rowData = csvRows[i].split(',')
         const dataLabel = rowData.splice(-1, 1)[0].trim()
 
