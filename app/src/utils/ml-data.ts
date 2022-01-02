@@ -12,16 +12,20 @@ export const createDataFromCSVRows = (csvRows: string[]): CSVData => {
         const rowData = csvRows[i].split(',')
         const dataLabel = rowData.splice(-1, 1)[0].trim()
 
-        if (!labelsMap.has(dataLabel)) {
-            labelsMap.set(dataLabel, labelsCounter);
-            labelsCounter++;
+        if (dataLabel.length > 0) {
+            if (!labelsMap.has(dataLabel)) {
+                labelsMap.set(dataLabel, labelsCounter);
+                labelsCounter++;
+            }
+    
+            const labelData = labelsMap.get(dataLabel)
+    
+            if (labelData !== undefined) {
+                data.push(createRowData(rowData, labelData));
+            }
         }
 
-        const labelData = labelsMap.get(dataLabel)
-
-        if (labelData !== undefined) {
-            data.push(createRowData(rowData, labelData));
-        }
+       
 
     }
 

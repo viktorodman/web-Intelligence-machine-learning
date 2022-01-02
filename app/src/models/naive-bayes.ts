@@ -2,22 +2,19 @@ export default class NaiveBayes {
     private summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
     public fit(x: number[][], y: number[]): void {
-        
-
         this.summaries = this.summarizeByClass(x);
-        console.log(this.calculateClassProbabilities(this.summaries, x[0]));
     }
 
-    public predict(x: number[][]): (number | null)[] {
+    public predict(x: number[][]): number[] {
         const predictions = []
         
         for (const row of x) {
             const probabilities: Map<number, number> = this.calculateClassProbabilities(this.summaries, row);
-            let bestLabel = null;
+            let bestLabel = Number.MAX_SAFE_INTEGER;
             let bestProb = -1;
 
             for (const [classValue, probability] of probabilities) {
-                if (bestLabel === null || probability < bestProb) {
+                if (bestLabel === Number.MAX_SAFE_INTEGER || probability > bestProb) {
                     bestProb = probability;
                     bestLabel = classValue;
                 }
@@ -28,10 +25,22 @@ export default class NaiveBayes {
         return predictions;
     }
 
+    public accuracy_score(preds: number[], y: number[]): number {
+        let correct = 0;
+
+        for (let i = 0; i < preds.length; i++) {
+            if(preds[i] === y[i]) {
+                correct++;
+            }
+        }
+
+        return ((correct / preds.length) * 100)
+    }
+
 
     public calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]): Map<number, number> {
         const tempRows = [];
-        
+
         for (const [key, value] of summaries) {
             tempRows.push(value[0][2])
         }
@@ -61,7 +70,7 @@ export default class NaiveBayes {
     }
 
     public calculateProbability(x: number, mean: number, stdev: number){
-        const exponent = Math.exp(-((x-mean)**2 / (2 * stdev**2 )))
+        const exponent = Math.exp((-((x-mean)**2 / (2 * stdev**2 ))))
 
         return (1 / (Math.sqrt(2 * Math.PI) * stdev)) * exponent
     }
@@ -92,6 +101,7 @@ export default class NaiveBayes {
     }
 
     public mean(numbers: Array<number>): number {
+        
         return this.sum(numbers) / numbers.length;
     }
 
