@@ -25,7 +25,7 @@ export default class NaiveBayes {
         return predictions;
     }
 
-    public crossval_predict(x: number[][], y: number[], noFolds: number) {
+    public crossval_predict(x: number[][], y: number[], noFolds: number): number[] {
         const folds = this.crossValidationSplit(x, noFolds);
         const scores = []
 
@@ -51,39 +51,16 @@ export default class NaiveBayes {
         return scores;
     }
 
-    public naiveBayes(trainSet: number[][], testSet: number[][], labels: number[]) {
-        this.summaries = this.summarizeByClass(trainSet, labels)
-        return this.predict(testSet)
-    }
+    public accuracy_score(preds: number[], y: number[]): number {
+        let correct = 0;
 
-    
-
-    public mergeNested(arr: number[][][]) {
-        const sum = [];
-        for (const outer of arr) {
-            for (const inner of outer) {
-                sum.push(inner)
+        for (let i = 0; i < preds.length; i++) {
+            if(preds[i] === y[i]) {
+                correct++;
             }
         }
 
-        return sum;
-    }
-
-    public crossValidationSplit(dataset: number[][], noFolds: number) {
-        const dataSetSplit = [];
-        const dataSetCopy = [...dataset];
-        const foldSize = Math.round((dataset.length / noFolds));
-
-        for (let i = 0; i < noFolds; i++) {
-            const fold = []
-            while (fold.length < foldSize) {
-                const index = Math.floor(Math.random() * (dataSetCopy.length));
-                fold.push(dataSetCopy.splice(index, 1)[0])
-            }
-            dataSetSplit.push(fold);
-        }
-
-        return dataSetSplit;
+        return ((correct / preds.length) * 100)
     }
 
     public confusion_matrix(preds: number[], y:number[]): number[][] {
@@ -115,20 +92,42 @@ export default class NaiveBayes {
         return matrix
     }
 
-    public accuracy_score(preds: number[], y: number[]): number {
-        let correct = 0;
+    private naiveBayes(trainSet: number[][], testSet: number[][], labels: number[]) {
+        this.summaries = this.summarizeByClass(trainSet, labels)
+        return this.predict(testSet)
+    }
 
-        for (let i = 0; i < preds.length; i++) {
-            if(preds[i] === y[i]) {
-                correct++;
+    
+
+    private mergeNested(arr: number[][][]) {
+        const sum = [];
+        for (const outer of arr) {
+            for (const inner of outer) {
+                sum.push(inner)
             }
         }
 
-        return ((correct / preds.length) * 100)
+        return sum;
     }
 
+    private crossValidationSplit(dataset: number[][], noFolds: number) {
+        const dataSetSplit = [];
+        const dataSetCopy = [...dataset];
+        const foldSize = Math.round((dataset.length / noFolds));
 
-    public calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]): Map<number, number> {
+        for (let i = 0; i < noFolds; i++) {
+            const fold = []
+            while (fold.length < foldSize) {
+                const index = Math.floor(Math.random() * (dataSetCopy.length));
+                fold.push(dataSetCopy.splice(index, 1)[0])
+            }
+            dataSetSplit.push(fold);
+        }
+
+        return dataSetSplit;
+    }
+
+    private calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]): Map<number, number> {
         const probabilities = new Map<number, number>();
         let totalRows = this.calcTotalRows(summaries); 
         
@@ -150,13 +149,13 @@ export default class NaiveBayes {
         return probabilities
     }
 
-    public calculateProbability(x: number, mean: number, stdev: number){
+    private calculateProbability(x: number, mean: number, stdev: number){
         const exponent = Math.exp((-((x-mean)**2 / (2 * stdev**2 ))))
 
         return (1 / (Math.sqrt(2 * Math.PI) * stdev)) * exponent
     }
 
-    public calcTotalRows(summaries: Map<number, Array<Array<number>>>) {
+    private calcTotalRows(summaries: Map<number, Array<Array<number>>>) {
         const tempRows = [];
 
         for (const [key, value] of summaries) {
@@ -166,7 +165,7 @@ export default class NaiveBayes {
         return this.sum(tempRows);
     }
 
-    public summarizeByClass(dataset: Array<Array<number>>, labels: number[]) {
+    private summarizeByClass(dataset: Array<Array<number>>, labels: number[]) {
         const separated = this.separateByClass(dataset, labels);
         const summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
@@ -177,7 +176,7 @@ export default class NaiveBayes {
         return summaries
     }
 
-    public stdev(numbers: Array<number>): number {
+    private stdev(numbers: Array<number>): number {
         const avg = this.mean(numbers);
 
         const squaredNumbers = []
@@ -191,13 +190,13 @@ export default class NaiveBayes {
         return Math.sqrt(variance);
     }
 
-    public mean(numbers: Array<number>): number {
+    private mean(numbers: Array<number>): number {
         
         return this.sum(numbers) / numbers.length;
     }
 
 
-    public sum(numbers: Array<number>): number {
+    private sum(numbers: Array<number>): number {
         let sum = 0;
 
         for (const num of numbers) {

@@ -1,4 +1,4 @@
-import { CSVData, MLCategory, MLData } from "../types/ml-data";
+import { CSVData,  MLData } from "../types/ml-data";
 import { readCSVRowsFromFile } from "./file-reader";
 
 export const createDataFromCSVRows = async (path: string): Promise<CSVData> => {
