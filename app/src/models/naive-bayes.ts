@@ -1,5 +1,3 @@
-import { train } from "../utils/training";
-
 export default class NaiveBayes {
     private summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
@@ -43,7 +41,8 @@ export default class NaiveBayes {
                 testSet.push(rowCopy);
                 rowCopy[rowCopy.length -1] = Number.MAX_SAFE_INTEGER;
             }
-            const predicted = this.naiveBayes(newTrainSet, testSet, y);
+            this.fit(newTrainSet, y)
+            const predicted = this.predict(testSet);
             let actual = fold.map(f => f).map(g => g[g.length -1])
             const accuracy = this.accuracy_score(predicted, actual);
             scores.push(accuracy);
@@ -55,7 +54,6 @@ export default class NaiveBayes {
     public naiveBayes(trainSet: number[][], testSet: number[][], labels: number[]) {
         this.summaries = this.summarizeByClass(trainSet, labels)
         return this.predict(testSet)
-        
     }
 
     
@@ -239,7 +237,7 @@ export default class NaiveBayes {
             const currentLabel = separatedValues.get(value[value.length - 1]);
             currentLabel?.push(value);
         }
-        
+
         return separatedValues;
     }
 }

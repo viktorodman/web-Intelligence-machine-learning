@@ -1,6 +1,9 @@
 import { CSVData, MLCategory, MLData } from "../types/ml-data";
+import { readCSVRowsFromFile } from "./file-reader";
 
-export const createDataFromCSVRows = (csvRows: string[]): CSVData => {
+export const createDataFromCSVRows = async (path: string): Promise<CSVData> => {
+    const csvRows: string[] = await readCSVRowsFromFile(path);
+
     const attributeColumns = csvRows[0].split(',').slice(0, -1);
     const attributesMap: Map<string, number> = createAttributesMap(attributeColumns);
     const labelsMap: Map<string, number> = new Map<string, number>();
@@ -34,12 +37,16 @@ export const createDataFromCSVRows = (csvRows: string[]): CSVData => {
         categoryLabels: labelsMap,
         examples: data
     }
+}
 
-    /* const csvData: CSVData = {
-        attributes: createAttributesMap(attributeColumns),
-        categoryLabels,
-        examples
-    } */
+export const getLabels = (csvData: CSVData) => {
+    const labels = []
+
+    for (const l of csvData.categoryLabels.values()) {
+        labels.push(l)
+    }
+
+    return labels;
 }
 
 const createRowData = (row: string[], labelNumber: number): number[] => {
