@@ -7,6 +7,7 @@ import { train } from "./utils/training";
 const main = async (args: string[]) => {
     console.log(args)
     const path = args[2]
+    const filenameParts = path.split('/')
     const csvRows: string[] = await readCSVRowsFromFile(path);
     const csvData: CSVData = createDataFromCSVRows(csvRows);
 
@@ -17,11 +18,22 @@ const main = async (args: string[]) => {
         labels.push(l)
     }
 
-    console.log(labels)
+    const finalObject = {
+        file: filenameParts[filenameParts.length -1],
+        noExamples: csvData.examples.length,
+        noAttributes: csvData.attributes.size,
+        noClasses: csvData.categoryLabels.size
+    }
 
-    naiveBayes.fit(csvData.examples, labels)
+    console.log(finalObject)
 
-    const actual = csvData.examples.map(d => d).map(d2 => d2[d2.length -1])
+  /*   console.log(labels) */
+
+    console.log(naiveBayes.crossval_predict(csvData.examples, labels, 5));
+
+    /* naiveBayes.fit(csvData.examples, labels)
+
+    const actual = csvData.examples.map(d => d).map(d2 => d2[d2.length -1]) */
 
     
 
@@ -29,10 +41,10 @@ const main = async (args: string[]) => {
         
     } */
 
-    console.log(actual)
-    const predictions = naiveBayes.predict(csvData.examples);
+    /* console.log(actual) */
+    /* const predictions = naiveBayes.predict(csvData.examples);
 
-    naiveBayes.confusion_matrix(predictions, actual);
+    naiveBayes.confusion_matrix(predictions, actual); */
 
     /* const accurracy = naiveBayes.accuracy_score(predictions, actual);
 

@@ -1,3 +1,5 @@
+import { train } from "../utils/training";
+
 export default class NaiveBayes {
     private summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
@@ -23,6 +25,67 @@ export default class NaiveBayes {
         }
 
         return predictions;
+    }
+
+    public crossval_predict(x: number[][], y: number[], noFolds: number) {
+        const folds = this.crossValidationSplit(x, noFolds);
+        const scores = []
+
+        for (let i = 0; i < folds.length; i++) {
+            const fold = folds[i];
+            let trainSet = [...folds];
+            trainSet.splice(i, 1);
+            const newTrainSet = this.mergeNested(trainSet);
+            const testSet = [];
+
+            for (const row of fold) {
+                const rowCopy = [...row];
+                testSet.push(rowCopy);
+                rowCopy[rowCopy.length -1] = Number.MAX_SAFE_INTEGER;
+            }
+            const predicted = this.naiveBayes(newTrainSet, testSet, y);
+            let actual = fold.map(f => f).map(g => g[g.length -1])
+            const accuracy = this.accuracy_score(predicted, actual);
+            scores.push(accuracy);
+        }
+
+        return scores;
+    }
+
+    public naiveBayes(trainSet: number[][], testSet: number[][], labels: number[]) {
+        this.summaries = this.summarizeByClass(trainSet, labels)
+        return this.predict(testSet)
+        
+    }
+
+    
+
+    public mergeNested(arr: number[][][]) {
+        const sum = [];
+        for (const outer of arr) {
+            for (const inner of outer) {
+                sum.push(inner)
+            }
+        }
+
+        return sum;
+    }
+
+    public crossValidationSplit(dataset: number[][], noFolds: number) {
+        const dataSetSplit = [];
+        const dataSetCopy = [...dataset];
+        const foldSize = Math.round((dataset.length / noFolds));
+
+        for (let i = 0; i < noFolds; i++) {
+            const fold = []
+            while (fold.length < foldSize) {
+                const index = Math.floor(Math.random() * (dataSetCopy.length));
+                fold.push(dataSetCopy.splice(index, 1)[0])
+            }
+            dataSetSplit.push(fold);
+        }
+
+        return dataSetSplit;
     }
 
     public confusion_matrix(preds: number[], y:number[]): number[][] {
@@ -62,8 +125,6 @@ export default class NaiveBayes {
                 correct++;
             }
         }
-
-        console.log(correct)
 
         return ((correct / preds.length) * 100)
     }
@@ -178,19 +239,7 @@ export default class NaiveBayes {
             const currentLabel = separatedValues.get(value[value.length - 1]);
             currentLabel?.push(value);
         }
-
-
-        /* for (const value of values) {
-            const currentCategory = value[value.length - 1]
-
-            if (separatedValues.has(currentCategory)) {
-                const category = separatedValues.get(currentCategory)
-                category?.push(value)
-            } else {
-                separatedValues.set(currentCategory, [ value ])
-            }
-        } */
-
+        
         return separatedValues;
     }
 }
