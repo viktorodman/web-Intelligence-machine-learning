@@ -2,7 +2,7 @@ export default class NaiveBayes {
     private summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
     public fit(x: number[][], y: number[]): void {
-        this.summaries = this.summarizeByClass(x);
+        this.summaries = this.summarizeByClass(x, y);
     }
 
     public predict(x: number[][]): number[] {
@@ -25,6 +25,35 @@ export default class NaiveBayes {
         return predictions;
     }
 
+    public confusion_matrix(preds: number[], y:number[]): number[][] {
+        const matrix: number[][] = [];
+
+        const unique = new Set(y);
+
+        for (const val of unique) {
+            const row = [];
+            for (const val2 of unique) {
+                row.push(0)
+            }
+            matrix.push(row);
+        }
+
+        
+        for (let i = 0; i < preds.length; i++) {
+            const currentPred = preds[i];
+            const actual = y[i];
+            
+            if (currentPred === actual) {
+                matrix[currentPred][currentPred] += 1;
+            } else {
+                matrix[actual][currentPred] += 1;
+            }
+        }
+       
+
+        return matrix
+    }
+
     public accuracy_score(preds: number[], y: number[]): number {
         let correct = 0;
 
@@ -34,20 +63,15 @@ export default class NaiveBayes {
             }
         }
 
+        console.log(correct)
+
         return ((correct / preds.length) * 100)
     }
 
 
     public calculateClassProbabilities(summaries: Map<number, Array<Array<number>>>, row: number[]): Map<number, number> {
-        const tempRows = [];
-
-        for (const [key, value] of summaries) {
-            tempRows.push(value[0][2])
-        }
-        
-        let totalRows = this.sum(tempRows); 
-
         const probabilities = new Map<number, number>();
+        let totalRows = this.calcTotalRows(summaries); 
         
         for (const [classValue, classSummary] of summaries) {
             probabilities.set(classValue, (classSummary[0][2] / totalRows))
@@ -55,12 +79,10 @@ export default class NaiveBayes {
             for (let i = 0; i < classSummary.length; i++) {
                 let currentVal = probabilities.get(classValue);
                 const x = row[i];
-                const mean = classSummary[i][0];
-                const stdev = classSummary[i][1];
+                const [mean, stdev] = classSummary[i];
 
                 if (currentVal !== undefined) {
                     currentVal *= this.calculateProbability(x, mean, stdev);
-                    
                     probabilities.set(classValue, currentVal);
                 }
             }   
@@ -75,8 +97,18 @@ export default class NaiveBayes {
         return (1 / (Math.sqrt(2 * Math.PI) * stdev)) * exponent
     }
 
-    public summarizeByClass(dataset: Array<Array<number>>) {
-        const separated = this.separateByClass(dataset);
+    public calcTotalRows(summaries: Map<number, Array<Array<number>>>) {
+        const tempRows = [];
+
+        for (const [key, value] of summaries) {
+            tempRows.push(value[0][2])
+        }
+        
+        return this.sum(tempRows);
+    }
+
+    public summarizeByClass(dataset: Array<Array<number>>, labels: number[]) {
+        const separated = this.separateByClass(dataset, labels);
         const summaries: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
 
         for (const [class_value, row] of separated) {
@@ -135,10 +167,20 @@ export default class NaiveBayes {
         return columnResults;
     }
 
-    private separateByClass(values: Array<Array<number>>): Map<number, Array<Array<number>>> {
+    private separateByClass(values: Array<Array<number>>, labels: number[]): Map<number, Array<Array<number>>> {
         const separatedValues: Map<number, Array<Array<number>>> = new Map<number, Array<Array<number>>>();
         
+        for (const label of labels) {
+            separatedValues.set(label, []);
+        }
+
         for (const value of values) {
+            const currentLabel = separatedValues.get(value[value.length - 1]);
+            currentLabel?.push(value);
+        }
+
+
+        /* for (const value of values) {
             const currentCategory = value[value.length - 1]
 
             if (separatedValues.has(currentCategory)) {
@@ -147,7 +189,7 @@ export default class NaiveBayes {
             } else {
                 separatedValues.set(currentCategory, [ value ])
             }
-        }
+        } */
 
         return separatedValues;
     }

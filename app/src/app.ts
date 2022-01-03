@@ -17,16 +17,26 @@ const main = async (args: string[]) => {
         labels.push(l)
     }
 
+    console.log(labels)
+
     naiveBayes.fit(csvData.examples, labels)
 
     const actual = csvData.examples.map(d => d).map(d2 => d2[d2.length -1])
 
+    
+
+    /* for (const u of ) {
+        
+    } */
+
     console.log(actual)
     const predictions = naiveBayes.predict(csvData.examples);
 
-    const accurracy = naiveBayes.accuracy_score(predictions, actual);
+    naiveBayes.confusion_matrix(predictions, actual);
 
-    console.log(accurracy)
+    /* const accurracy = naiveBayes.accuracy_score(predictions, actual);
+
+    console.log(accurracy) */
 }
 
 main(process.argv);
